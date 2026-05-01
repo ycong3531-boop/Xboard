@@ -28,6 +28,9 @@ RUN echo "Attempting to clone branch: ${BRANCH_NAME} from ${REPO_URL} with CACHE
     git clone --depth 1 --branch ${BRANCH_NAME} ${REPO_URL} . && \
     git submodule update --init --recursive --force
 
+# Add buddy theme files directly
+COPY public/buddy /www/public/buddy
+
 COPY .docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY .docker/caddy/Caddyfile /etc/caddy/Caddyfile
 COPY .docker/php/zz-xboard.ini /usr/local/etc/php/conf.d/zz-xboard.ini
