@@ -18,15 +18,21 @@ COPY .docker /
 
 # Add build arguments
 ARG CACHEBUST=1
-ARG REPO_URL=https://github.com/cedar2025/Xboard
+ARG REPO_URL=https://github.com/ycong3531-boop/Xboard
 ARG BRANCH_NAME=master
 
-RUN echo "Attempting to clone branch: ${BRANCH_NAME} from ${REPO_URL} with CACHEBUST: ${CACHEBUST}" && \
+# Install wget for downloading source
+RUN apk --no-cache add wget ca-certificates
+
+RUN echo "Fetching branch: ${BRANCH_NAME} from ${REPO_URL} with CACHEBUST: ${CACHEBUST}" && \
     rm -rf ./* && \
     rm -rf .git && \
-    git config --global --add safe.directory /www && \
-    git clone --depth 1 --branch ${BRANCH_NAME} ${REPO_URL} . && \
-    git submodule update --init --recursive --force
+    wget -q -O /tmp/repo.tar.gz \
+    "https://github.com/ycong3531-boop/Xboard/archive/refs/heads/${BRANCH_NAME}.tar.gz" && \
+    mkdir -p /tmp/repo && \
+    tar xzf /tmp/repo.tar.gz -C /tmp/repo --strip-components=1 && \
+    cp -a /tmp/repo/. /www/ && \
+    rm -rf /tmp/repo /tmp/repo.tar.gz
 
 COPY .docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY .docker/caddy/Caddyfile /etc/caddy/Caddyfile
