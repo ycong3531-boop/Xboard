@@ -20,58 +20,12 @@ use Illuminate\Support\Facades\File;
 
 
 Route::get('/', function (Request $request) {
-    if (admin_setting('app_url') && admin_setting('safe_mode_enable', 0)) {
-        $requestHost = $request->getHost();
-        $configHost = parse_url(admin_setting('app_url'), PHP_URL_HOST);
-        
-        if ($requestHost !== $configHost) {
-            abort(403);
-        }
+    $buddyFile = public_path('buddy/index.html');
+    if (File::exists($buddyFile)) {
+        return response()->file($buddyFile);
     }
-
-    $theme = admin_setting('frontend_theme', 'Xboard');
-    $themeService = new ThemeService();
-
-    try {
-        if (!$themeService->exists($theme)) {
-            if ($theme !== 'Xboard') {
-                Log::warning('Theme not found, switching to default theme', ['theme' => $theme]);
-                $theme = 'Xboard';
-                admin_setting(['frontend_theme' => $theme]);
-            }
-            $themeService->switch($theme);
-        }
-
-        if (!$themeService->getThemeViewPath($theme)) {
-            throw new Exception('主题视图文件不存在');
-        }
-
-        $publicThemePath = public_path('theme/' . $theme);
-        if (!File::exists($publicThemePath)) {
-            $themePath = $themeService->getThemePath($theme);
-            if (!$themePath || !File::copyDirectory($themePath, $publicThemePath)) {
-                throw new Exception('主题初始化失败');
-            }
-            Log::info('Theme initialized in public directory', ['theme' => $theme]);
-        }
-
-        $renderParams = [
-            'title' => admin_setting('app_name', 'Xboard'),
-            'theme' => $theme,
-            'version' => app(UpdateService::class)->getCurrentVersion(),
-            'description' => admin_setting('app_description', 'Xboard is best'),
-            'logo' => admin_setting('logo'),
-            'theme_config' => $themeService->getConfig($theme)
-        ];
-        return view('theme::' . $theme . '.dashboard', $renderParams);
-    } catch (Exception $e) {
-        Log::error('Theme rendering failed', [
-            'theme' => $theme,
-            'error' => $e->getMessage()
-        ]);
-        abort(500, '主题加载失败');
-    }
-});
+    return abort(404);
+}););
 
 //TODO:: 兼容
 Route::get('/' . admin_setting('secure_path', admin_setting('frontend_admin_path', hash('crc32b', config('app.key')))), function () {
