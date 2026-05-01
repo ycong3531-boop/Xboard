@@ -7,6 +7,14 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
 
+Route::get('/buddy', function () {
+    $buddyFile = public_path('buddy/index.html');
+    if (File::exists($buddyFile)) {
+        return response()->file($buddyFile);
+    }
+    abort(404, 'Buddy theme not found');
+});
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
